@@ -1,0 +1,40 @@
+function detachIntoMultipleObj Obj Base_Name =  --split the lowpoly object in all it's subobjects
+(
+	if (classof Obj) == editable_poly do
+	(
+		while polyOp.getNumFaces obj != 0 do
+		(
+			local f_list = polyOp.getElementsUsingFace obj #{1} --select subobject
+			polyOp.detachFaces obj f_list asNode:true name:(uniqueName Base_Name) --split subobject
+		)
+		
+		delete obj
+		
+		select (execute ("$*" + Base_Name + "*")) --select all the new splitted objects
+		returnValue = selection as Array --put the selected objects into a new Array
+	)
+	
+)
+
+function boundingBoxClosest lpobj hpobjarr = -- 1 lowpoly object is being compared to all the highpoly objects
+(   --Compare the bounding bax of the lowpoly object with the bounding box of the highpoly object
+	local bb1 = nodeGetBoundingBox lpobj (matrix3 1) -- intitialize the variable with the first bounding box information of the lowpoly object
+	local bb2 = nodeGetBoundingBox hpobjarr[1] (matrix3 1) -- intitialize the variable with the first bounding box information of the highpoly object
+	local dist = (distance bb1[1] bb2[1] + distance bb1[2] bb2[2] + 10) --bb1 = min dist; bb2 = max dist > min distance + max distance + 10 so when the for loop loops over the array there is allready a smaller value
+	
+	for i = 1 to hpobjarr.count do
+	(
+		bb1 = nodeGetBoundingBox lpobj (matrix3 1)
+		bb2 = nodeGetBoundingBox hpobjarr[i] (matrix3 1)
+		local dist1 = distance bb1[1] bb2[1]
+		local dist2 = distance bb1[2] bb2[2]
+		
+		if dist > (dist1 + dist2) do
+		(
+			dist = (dist1 + dist2)
+			lpobj.name = hpobjarr[i].name -- closest highpoly object that is availeble gives his name to the lowpoly obj
+		)
+	)
+	
+	return lpobj -- return closest
+)
